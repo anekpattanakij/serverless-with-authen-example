@@ -20,7 +20,6 @@ import { errorToHttpStatusCode } from './util/errorResponseUtil';
 import { RedisUtility } from './util/redisUtil';
 
 const JWT_SIGNATURE_POSITION: number = 2;
-const WAIT_TIME = 1000;
 
 export const register = async (event, context, callback) => {
   // console.log('EMAIL_SERVICE_API_KEY: ', process.env.EMAIL_SERVICE_API_KEY);
@@ -36,7 +35,6 @@ export const register = async (event, context, callback) => {
     } catch (err) {
       throw new Error(ERROR_CODE_INVALID_INPUT, 'Error on convert json');
     }
-    console.log('temp1');
     if (
       !inputObject.email ||
       !validator.isEmail(inputObject.email) ||
@@ -48,7 +46,7 @@ export const register = async (event, context, callback) => {
       throw new Error(ERROR_CODE_INVALID_INPUT, 'Invalid input');
     }
     // TODO Check for input format
-    console.log('temp2');
+
     const returnUserToken: User = new User(
       0,
       inputObject.displayName,

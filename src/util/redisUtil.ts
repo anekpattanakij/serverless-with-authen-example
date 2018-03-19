@@ -33,57 +33,61 @@ export class RedisUtility {
       database: 0,
     });
     return new Promise((resolve, reject) => {
-      client.on('connect', () => {
-        console.log('redis connected!');
-        let redisOperationList;
-        if (operation === Method.GET) {
-          redisOperationList = [
-            client.multi(),
-            client.get(key),
-            client.expire(
-              key,
-              config.keyExpireInSecond *
-                MULTIPLY_TIME_TO_KEEP_SESSION_INFORMATION,
-            ),
-            client.exec(),
-          ];
-        }
-        if (operation === Method.SET) {
-          redisOperationList = [
-            client.multi(),
-            client.set(key, value),
-            client.expire(
-              key,
-              config.keyExpireInSecond *
-                MULTIPLY_TIME_TO_KEEP_SESSION_INFORMATION,
-            ),
-            client.exec(),
-          ];
-        }
-        Promise.all(redisOperationList)
-          .then(res => {
-            try {
-              if (operation === Method.GET) {
-                console.log('transactions:', res);
-                resolve(res[1][1]);
-              } else {
-                console.log('transactions:', res);
-                resolve(res);
+      try {
+        client.on('connect', () => {
+          console.log('redis connected!');
+          let redisOperationList;
+          if (operation === Method.GET) {
+            redisOperationList = [
+              client.multi(),
+              client.get(key),
+              client.expire(
+                key,
+                config.keyExpireInSecond *
+                  MULTIPLY_TIME_TO_KEEP_SESSION_INFORMATION,
+              ),
+              client.exec(),
+            ];
+          }
+          if (operation === Method.SET) {
+            redisOperationList = [
+              client.multi(),
+              client.set(key, value),
+              client.expire(
+                key,
+                config.keyExpireInSecond *
+                  MULTIPLY_TIME_TO_KEEP_SESSION_INFORMATION,
+              ),
+              client.exec(),
+            ];
+          }
+          Promise.all(redisOperationList)
+            .then(res => {
+              try {
+                if (operation === Method.GET) {
+                  console.log('transactions:', res);
+                  resolve(res[1][1]);
+                } else {
+                  console.log('transactions:', res);
+                  resolve(res);
+                }
+                return client.quit();
+              } catch (err) {
+                reject(err);
+                return client.quit();
               }
-              return client.quit();
-            } catch (err) {
-              reject(err);
-              return client.quit();
-            }
-          })
-          .then(res => {
-            console.log('redis client quit:', res);
-          })
-          .catch(err => {
-            console.error(err);
-            reject(new Error('REDISERR01', 'redisError'));
-          });
-      });
+            })
+            .then(res => {
+              console.log('redis client quit:', res);
+            })
+            .catch(err => {
+              console.error(err);
+              reject(new Error('REDISERR01', 'redisError'));
+            });
+        });
+      } catch (err) {
+        reject(new Error('REDISERR01', 'redisError'));
+      }
     });
   }
 }
